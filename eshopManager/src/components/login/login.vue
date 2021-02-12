@@ -16,7 +16,9 @@
           v-model="formdata.password"
         ></el-input>
       </el-form-item>
-      <el-button class="login-btn">登录</el-button>
+      <el-button class="login-btn" type="primary" @click="handlelogin()"
+        >登录</el-button
+      >
     </el-form>
   </div>
 </template>
@@ -31,6 +33,31 @@ export default {
       },
     };
   },
+  methods: {
+    async handlelogin() {
+      //console.log("!!!!!");
+      await this.$http.post("login", this.formdata).then((res) => {
+        console.log(res);
+        // 1.登录成成功：提示成功，并跳转首页
+        // 2.登录失败：提示失败提示
+        const {
+          data,
+          meta: { msg, status },
+        } = res.data;
+        //console.log(data, status);
+        if (status === 200) {
+          this.$message({
+            message: "登录成功",
+            type: "success",
+          });
+          //跳转首页
+          this.$router.push({ name: "home" });
+        } else {
+          this.$message.error("登录错误，请重试");
+        }
+      });
+    },
+  },
 };
 </script>
 
@@ -41,5 +68,14 @@ export default {
   justify-content: center;
   align-items: center;
   background-color: #324152;
+}
+.login-wrap .login-form {
+  width: 400px;
+  background-color: #fff;
+  border-radius: 5px;
+  padding: 30px;
+}
+.login-wrap .login-btn {
+  width: 100%;
 }
 </style>
