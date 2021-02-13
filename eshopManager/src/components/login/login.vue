@@ -35,9 +35,8 @@ export default {
   },
   methods: {
     async handlelogin() {
-      //console.log("!!!!!");
-      await this.$http.post("login", this.formdata).then((res) => {
-        console.log(res);
+      try {
+        const res = await this.$http.post("login", this.formdata);
         // 1.登录成成功：提示成功，并跳转首页
         // 2.登录失败：提示失败提示
         const {
@@ -46,6 +45,7 @@ export default {
         } = res.data;
         //console.log(data, status);
         if (status === 200) {
+          localStorage.setItem("token", data.token);
           this.$message({
             message: "登录成功",
             type: "success",
@@ -55,7 +55,9 @@ export default {
         } else {
           this.$message.error("登录错误，请重试");
         }
-      });
+      } catch (err) {
+        console.log(err);
+      }
     },
   },
 };
