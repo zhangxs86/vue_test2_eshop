@@ -32,21 +32,56 @@
           {{ scope.row.create_time | fmdate }}
         </template>
       </el-table-column>
-      <el-table-column prop="mg_state" label="用户状态">
-        <el-switch
-          v-model="user_status"
-          active-color="#13ce66"
-          inactive-color="#ff4949"
-        >
-        </el-switch>
+      <el-table-column label="用户状态">
+        <template slot-scope="scope">
+          <el-switch
+            v-model="scope.row.mg_state"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          >
+          </el-switch>
+        </template>
       </el-table-column>
       <el-table-column label="操作">
-        <el-button type="primary" icon="el-icon-edit" circle></el-button>
-        <el-button type="danger" icon="el-icon-delete" circle></el-button>
-        <el-button type="success" icon="el-icon-check" circle></el-button>
+        <template slot-scope="scope">
+          <el-button
+            plain
+            type="primary"
+            size="mini"
+            icon="el-icon-edit"
+            circle
+            v-bind="scope.row"
+          ></el-button>
+          <el-button
+            plain
+            size="mini"
+            type="danger"
+            icon="el-icon-delete"
+            circle
+            v-bind="scope.row"
+          ></el-button>
+          <el-button
+            plain
+            size="mini"
+            type="success"
+            icon="el-icon-check"
+            circle
+            v-bind="scope.row"
+          ></el-button>
+        </template>
       </el-table-column>
     </el-table>
     <!-- 分页 -->
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="pagenum"
+      :page-sizes="[2, 4, 6, 8]"
+      :page-size="2"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+    >
+    </el-pagination>
   </el-card>
 </template>
 
@@ -56,7 +91,7 @@ export default {
     return {
       query: "",
       pagenum: 1,
-      pagesize: 4,
+      pagesize: 2,
       user_status: "",
       userlist: [],
       total: -1,
@@ -66,6 +101,17 @@ export default {
     this.getUserList();
   },
   methods: {
+    handleSizeChange(val) {
+      console.log(`每页 ${val} 条`);
+      this.pagesize = val;
+      this.pagenum = 1;
+      this.getUserList();
+    },
+    handleCurrentChange(val) {
+      console.log(`当前页: ${val}`);
+      this.pagenum = val;
+      this.getUserList();
+    },
     async getUserList() {
       // 需要授权的 API ，必须在请求头中使用 `Authorization` 字段提供 `token` 令牌
       //在axios插件中设置默认的请求头
