@@ -9,10 +9,19 @@
     <!-- 搜索框  el的分栏间隔插件-->
     <el-row :gutter="15" class="search-row">
       <el-col :span="8"
-        ><el-input v-model="query" placeholder="请输入内容"></el-input>
+        ><el-input
+          v-model="query"
+          placeholder="请输入内容"
+          clearable
+          @clear="cleardata()"
+        ></el-input>
       </el-col>
       <el-col :span="1"
-        ><el-button icon="el-icon-search" circle></el-button
+        ><el-button
+          @click="searchUser()"
+          icon="el-icon-search"
+          circle
+        ></el-button
       ></el-col>
       <el-col :span="3">
         <el-button type="success" plain>添加用户</el-button>
@@ -101,6 +110,13 @@ export default {
     this.getUserList();
   },
   methods: {
+    searchUser() {
+      this.getUserList();
+    },
+    cleardata() {
+      //this.query = "";
+      this.getUserList();
+    },
     handleSizeChange(val) {
       console.log(`每页 ${val} 条`);
       this.pagesize = val;
@@ -116,20 +132,24 @@ export default {
       // 需要授权的 API ，必须在请求头中使用 `Authorization` 字段提供 `token` 令牌
       //在axios插件中设置默认的请求头
       // 如果字符串中有模板属性则需要用  ` $() `，不能用常规的引号
-      const res = await this.$http.get(
-        `users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`
-      );
-      console.log(res);
-      const {
-        meta: { status, msg },
-        data: { users, total },
-      } = res.data;
-      if (status === 200) {
-        this.userlist = users;
-        this.total = total;
-        this.$message.success(msg);
-      } else {
-        this.$message.warning(msg);
+      try {
+        const res = await this.$http.get(
+          `users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`
+        );
+        console.log(res);
+        const {
+          meta: { status, msg },
+          data: { users, total },
+        } = res.data;
+        if (status === 200) {
+          this.userlist = users;
+          this.total = total;
+          this.$message.success(msg);
+        } else {
+          this.$message.warning(msg);
+        }
+      } catch (err) {
+        console.out(err);
       }
     },
   },
