@@ -24,7 +24,9 @@
         ></el-button
       ></el-col>
       <el-col :span="3">
-        <el-button type="success" plain>添加用户</el-button>
+        <el-button type="success" plain @click="AddUserDialog()"
+          >添加用户</el-button
+        >
       </el-col>
     </el-row>
     <!-- 表格 详见e-ui表格属性介绍-->
@@ -61,6 +63,7 @@
             circle
             v-bind="scope.row"
           ></el-button>
+
           <el-button
             plain
             size="mini"
@@ -91,6 +94,28 @@
       :total="total"
     >
     </el-pagination>
+
+    <!-- 添加对话框 默认隐藏 -->
+    <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAdd">
+      <el-form :model="form">
+        <el-form-item label="用户名" label-width="100px">
+          <el-input v-model="form.username" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" label-width="100px">
+          <el-input v-model="form.password" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" label-width="100px">
+          <el-input v-model="form.emial" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" label-width="100px">
+          <el-input v-model="form.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="Adduser_cancle()">取 消</el-button>
+        <el-button type="primary" @click="Adduser_fix()">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 
@@ -104,12 +129,25 @@ export default {
       user_status: "",
       userlist: [],
       total: -1,
+      dialogFormVisibleAdd: false,
+      form: { username: "", password: "", email: "", mobile: "" },
     };
   },
   created() {
     this.getUserList();
   },
   methods: {
+    Adduser_fix() {
+      this.AddUser();
+      Object.keys(this.form).forEach((key) => (this.form[key] = ""));
+    },
+    Adduser_cancle() {
+      Object.keys(this.form).forEach((key) => (this.form[key] = ""));
+      this.dialogFormVisibleAdd = false;
+    },
+    AddUserDialog() {
+      this.dialogFormVisibleAdd = true;
+    },
     searchUser() {
       this.getUserList();
     },
@@ -149,7 +187,26 @@ export default {
           this.$message.warning(msg);
         }
       } catch (err) {
-        console.out(err);
+        console.log(err);
+      }
+    },
+    async AddUser() {
+      try {
+        const res = await this.$http.post("users", this.form);
+        console.log(res);
+        const {
+          meta: { status, msg },
+        } = res.data;
+        if (status === 201) {
+          this.$message.success(msg);
+          this.dialogFormVisibleAdd = false;
+        } else if (status === 400) {
+          this.$message.warning(msg);
+        } else {
+          this.$message.warning(msg);
+        }
+      } catch (err) {
+        console.log(err);
       }
     },
   },
