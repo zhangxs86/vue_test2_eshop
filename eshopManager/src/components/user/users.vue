@@ -49,6 +49,7 @@
             v-model="scope.row.mg_state"
             active-color="#13ce66"
             inactive-color="#ff4949"
+            @change="changeMgState(scope.row)"
           >
           </el-switch>
         </template>
@@ -62,6 +63,7 @@
             icon="el-icon-edit"
             circle
             v-bind="scope.row"
+            @click="editUserDialog(scope.row.id)"
           ></el-button>
 
           <el-button
@@ -71,6 +73,7 @@
             icon="el-icon-delete"
             circle
             v-bind="scope.row"
+            @click="delUserdig(scope.row.id)"
           ></el-button>
           <el-button
             plain
@@ -116,6 +119,25 @@
         <el-button type="primary" @click="Adduser_fix()">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 编辑对话框 默认隐藏 -->
+    <!-- <template slot-scope="scope"> -->
+    <el-dialog title="修改用户" :visible.sync="dialogFormVisibleEdit">
+      <el-form :model="form">
+        <el-form-item label="邮箱" label-width="100px">
+          <el-input v-model="form.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" label-width="100px">
+          <el-input v-model="form.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="Edituser_cancle()">取 消</el-button>
+        <el-button type="primary" @click="Edituser_fix(temp_id)"
+          >确 定</el-button
+        >
+      </div>
+    </el-dialog>
+    <!-- </template> -->
   </el-card>
 </template>
 
@@ -127,9 +149,11 @@ export default {
       pagenum: 1,
       pagesize: 2,
       user_status: "",
+      temp_id: "",
       userlist: [],
       total: -1,
       dialogFormVisibleAdd: false,
+      dialogFormVisibleEdit: false,
       form: { username: "", password: "", email: "", mobile: "" },
     };
   },
@@ -137,6 +161,63 @@ export default {
     this.getUserList();
   },
   methods: {
+    delUserdig(id) {
+      this.$confirm("删除用户?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(async () => {
+          try {
+            const res = await this.$http.delete(`users/${id}`);
+            console.log(res);
+            const {
+              meta: { status, msg },
+            } = res.data;
+            if (status === 200) {
+              this.$message({
+                type: "success",
+                message: "删除成功!",
+              });
+              this.getUserList();
+            } else {
+              this.$message({
+                type: "error",
+                message: "删除失败!",
+              });
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除",
+          });
+        });
+    },
+    //--------------------修改用户
+    editUserDialog(id) {
+      this.finduserById(id).then((data) => {
+        const { mobile, email } = data;
+        this.form.mobile = data.mobile;
+        this.form.email = data.email;
+      });
+      this.temp_id = id;
+      this.dialogFormVisibleEdit = true;
+      console.log("form:" + this.form);
+    },
+    Edituser_fix(id) {
+      this.editUserSave(id);
+      this.getUserList();
+      Object.keys(this.form).forEach((key) => (this.form[key] = ""));
+    },
+    Edituser_cancle() {
+      Object.keys(this.form).forEach((key) => (this.form[key] = ""));
+      this.dialogFormVisibleEdit = false;
+    },
+    //---------------------新增用户
     Adduser_fix() {
       this.AddUser();
       Object.keys(this.form).forEach((key) => (this.form[key] = ""));
@@ -174,7 +255,7 @@ export default {
         const res = await this.$http.get(
           `users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`
         );
-        console.log(res);
+        //console.log(res);
         const {
           meta: { status, msg },
           data: { users, total },
@@ -200,6 +281,50 @@ export default {
         if (status === 201) {
           this.$message.success(msg);
           this.dialogFormVisibleAdd = false;
+        } else if (status === 400) {
+          this.$message.warning(msg);
+        } else {
+          this.$message.warning(msg);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    //修改状态
+    async changeMgState(user) {
+      //发送请求
+      const res = await this.$http.put(
+        "users/" + user.id + "/state/" + user.mg_state
+      );
+      console.log(res);
+      if (res.data.meta.status === 200) {
+        //提示
+        this.$message.success(res.data.meta.msg);
+      } else {
+        this.$message.error(res.data.meta.msg);
+      }
+    },
+    async finduserById(id) {
+      try {
+        const res = await this.$http.get(`users/${id}`);
+        //console.log(res);
+        const { data } = res.data;
+        console.log(data);
+        return data;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    async editUserSave(id) {
+      try {
+        const res = await this.$http.put(`users/${id}`, this.form);
+        console.log(res);
+        const {
+          meta: { status, msg },
+        } = res.data;
+        if (status === 200) {
+          this.$message.success(msg);
+          this.dialogFormVisibleEdit = false;
         } else if (status === 400) {
           this.$message.warning(msg);
         } else {
