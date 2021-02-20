@@ -82,6 +82,7 @@
             icon="el-icon-check"
             circle
             v-bind="scope.row"
+            @click="istribution_role(scope.row.id)"
           ></el-button>
         </template>
       </el-table-column>
@@ -137,6 +138,34 @@
         >
       </div>
     </el-dialog>
+    <!-- 角色分配对话框 -->
+    <el-dialog title="分配角色" :visible.sync="dialogFormVisibleRole">
+      <el-form :model="form">
+        <el-form-item label="用户名" label-width="100px">
+          <el-input
+            v-model="form.username"
+            autocomplete="off"
+            disabled
+            maxlength="10"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="角色" label-width="100px">
+          <el-select v-model="role_id" placeholder="请选择角色">
+            <el-option label="请选择" :value="-1"></el-option>
+            <el-option
+              :label="item.roleName"
+              :value="item.id"
+              v-for="(item, i) in roles"
+              :key="i"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="role_cancle()">取 消</el-button>
+        <el-button type="primary" @click="role_fix()">确 定</el-button>
+      </div>
+    </el-dialog>
     <!-- </template> -->
   </el-card>
 </template>
@@ -150,10 +179,13 @@ export default {
       pagesize: 2,
       user_status: "",
       temp_id: "",
+      role_id: "",
       userlist: [],
+      roles: [],
       total: -1,
       dialogFormVisibleAdd: false,
       dialogFormVisibleEdit: false,
+      dialogFormVisibleRole: false,
       form: { username: "", password: "", email: "", mobile: "" },
     };
   },
@@ -161,6 +193,30 @@ export default {
     this.getUserList();
   },
   methods: {
+    role_cancle() {
+      this.form = {};
+      this.role_id = "";
+      this.dialogFormVisibleRole = false;
+    },
+    role_fix() {
+      //console.log(this.role_id);
+      this.fenpei_role();
+      this.role_id = "";
+      this.temp_id = "";
+      this.dialogFormVisibleRole = false;
+    },
+    async istribution_role(userid) {
+      const res1 = await this.$http.get("roles");
+      this.roles = res1.data.data;
+      const res = this.finduserById(userid).then((data) => {
+        const { username, rid } = data;
+        this.role_id = rid;
+        this.form.username = username;
+        this.temp_id = userid;
+        console.log(this.role_id);
+      });
+      this.dialogFormVisibleRole = true;
+    },
     delUserdig(id) {
       this.$confirm("删除用户?", "提示", {
         confirmButtonText: "确定",
@@ -325,8 +381,25 @@ export default {
         if (status === 200) {
           this.$message.success(msg);
           this.dialogFormVisibleEdit = false;
-        } else if (status === 400) {
+        } else {
           this.$message.warning(msg);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    async fenpei_role() {
+      try {
+        //console.log(this.role_id);
+        const res = await this.$http.put(`users/${this.temp_id}/role`, {
+          rid: this.role_id,
+        });
+        console.log(res);
+        const {
+          meta: { status, msg },
+        } = res.data;
+        if (status === 200) {
+          this.$message.success(msg);
         } else {
           this.$message.warning(msg);
         }
