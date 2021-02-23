@@ -78,11 +78,39 @@
             icon="el-icon-check"
             circle
             v-bind="scope.row"
-            @click="istribution_role(scope.row.id)"
+            @click="showrightdig(scope.row)"
           ></el-button>
         </template>
       </el-table-column>
     </el-table>
+    <!-- 修改权限 -->
+    <el-dialog title="修改权限" :visible.sync="rightFormVisibleEdit">
+      <!-- 树形结构
+      data->数据源[]
+      show-checkbox-》选择框
+      node-key-》没一个节点的唯一表示，通常是data数据源的key名的id
+      default-check-keys【要选择的节点id】数组中包含
+      props 配置项{label，children}
+      label节点的文字标题，children是数据中的key名 -->
+
+      <el-tree
+        :data="rights"
+        show-checkbox
+        default-expand-all
+        node-key="id"
+        ref="tree"
+        highlight-current
+        :default-checked-keys="arrcheck"
+        :props="defaultProps"
+      >
+      </el-tree>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="rightFormVisibleEdit = FALSE">取 消</el-button>
+        <el-button type="primary" @click="Edituser_fix(temp_id)"
+          >确 定</el-button
+        >
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 
@@ -96,6 +124,13 @@ export default {
         { name: "角色管理", address: "/role" },
       ],
       rolelist: [],
+      rightFormVisibleEdit: false,
+      arrcheck: [],
+      rights: [],
+      defaultProps: {
+        children: "children",
+        label: "authName",
+      },
     };
   },
   created() {
@@ -104,9 +139,15 @@ export default {
   methods: {
     async getRolelist() {
       const res = await this.$http.get("roles");
-      //console.log(res);
+      console.log(res);
       this.rolelist = res.data.data;
       //console.log(this.rolelist);
+    },
+    async getRightstree() {
+      const res = await this.$http.get("rights/tree");
+      this.rights = res.data.data;
+
+      console.log(res);
     },
     async handleClose(role, rightid) {
       //console.log(item, item.children[n]);
@@ -120,6 +161,22 @@ export default {
       }
       //console.log(res);
       //item.children.splice(n, 1);
+    },
+    showrightdig(role) {
+      this.getRightstree();
+      let arrtemp = [];
+
+      role.children.forEach((item) => {
+        arrtemp.push(item.id);
+        item.children.forEach((item1) => {
+          arrtemp.push(item1.id);
+          item1.children.forEach((item2) => {
+            arrtemp.push(item2.id);
+          });
+        });
+      });
+      this.arrcheck = arrtemp;
+      this.rightFormVisibleEdit = true;
     },
   },
 };
