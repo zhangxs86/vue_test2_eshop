@@ -105,10 +105,8 @@
       >
       </el-tree>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="rightFormVisibleEdit = FALSE">取 消</el-button>
-        <el-button type="primary" @click="Edituser_fix(temp_id)"
-          >确 定</el-button
-        >
+        <el-button @click="rightFormVisibleEdit = false">取 消</el-button>
+        <el-button type="primary" @click="rights_fix()">确 定</el-button>
       </div>
     </el-dialog>
   </el-card>
@@ -125,6 +123,7 @@ export default {
       ],
       rolelist: [],
       rightFormVisibleEdit: false,
+      temp_rowid: "",
       arrcheck: [],
       rights: [],
       defaultProps: {
@@ -164,8 +163,11 @@ export default {
     },
     showrightdig(role) {
       this.getRightstree();
+      this.rightFormVisibleEdit = true;
+      //保存此时的roleid
+      this.temp_rowid = role.id;
       let arrtemp = [];
-
+      // 树形结构数据填充
       role.children.forEach((item) => {
         arrtemp.push(item.id);
         item.children.forEach((item1) => {
@@ -176,7 +178,25 @@ export default {
         });
       });
       this.arrcheck = arrtemp;
-      this.rightFormVisibleEdit = true;
+    },
+    async rights_fix() {
+      // 获取当前角色的id，
+      // 树形节点中，所有选中的label的id
+      // 获取全选id数组arr1 getcheckedkeys()和半选id数组 arr2 gethalfcheckedkeys();
+
+      // 给要操作的标签添加ref属性，然后利用$refs引用对象了
+      const arrykey1 = this.$refs.tree.getCheckedKeys();
+      const arrykey2 = this.$refs.tree.getHalfCheckedKeys();
+      const arrykey = [...arrykey1, ...arrykey2];
+      // console.log(arrykey1);
+      // console.log(arrykey2);
+      console.log(arrykey);
+      const res = await this.$http.post(`roles/${this.temp_rowid}/rights`, {
+        rids: arrykey.join(","),
+      });
+      this.rightFormVisibleEdit = false;
+      this.getRolelist();
+      console.log(res);
     },
   },
 };
