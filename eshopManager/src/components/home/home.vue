@@ -19,66 +19,18 @@
         <!-- 开启路由模式 -->
         <el-menu :unique-opened="true" :router="true">
           <!-- 1 -->
-          <el-submenu index="1">
+          <el-submenu index="1" v-for="(items, index) in menus" :key="index">
             <template slot="title">
               <i class="el-icon-location"></i>
-              <span> 用户管理</span>
+              <span>{{ items.authName }} </span>
             </template>
-            <el-menu-item index="/home/users">
+            <el-menu-item
+              v-for="(item2, index) in items.children"
+              :key="index"
+              :index="'/home/' + item2.path"
+            >
               <i class="el-icon-location"></i>
-              <span>用户列表</span>
-            </el-menu-item>
-          </el-submenu>
-          <!-- 2 -->
-          <el-submenu index="2">
-            <template slot="title">
-              <i class="el-icon-user-solid"></i>
-              <span>权限管理</span>
-            </template>
-            <el-menu-item index="/home/roles">
-              <i class="el-icon-user"></i>
-              <span>角色列表</span>
-            </el-menu-item>
-            <el-menu-item index="/home/rights">
-              <i class="el-icon-s-check"></i>
-              <span>权限列表</span>
-            </el-menu-item>
-          </el-submenu>
-          <!-- 3 -->
-          <el-submenu index="3">
-            <template slot="title">
-              <i class="el-icon-s-goods"></i>
-              <span>商品管理</span>
-            </template>
-            <el-menu-item index="3-1">
-              <i class="el-icon-bangzhu"></i>
-              <span>分类参数</span>
-            </el-menu-item>
-            <el-menu-item index="3-1">
-              <i class="el-icon-collection"></i>
-              <span>商品分类</span>
-            </el-menu-item>
-          </el-submenu>
-          <!-- 4 -->
-          <el-submenu index="4">
-            <template slot="title">
-              <i class="el-icon-s-order"></i>
-              <span>订单管理</span>
-            </template>
-            <el-menu-item index="4-1">
-              <i class="el-icon-shopping-bag-1"></i>
-              <span>订单列表</span>
-            </el-menu-item>
-          </el-submenu>
-          <!-- 5 -->
-          <el-submenu index="5">
-            <template slot="title">
-              <i class="el-icon-s-data"></i>
-              <span>数据统计</span>
-            </template>
-            <el-menu-item index="5-1">
-              <i class="el-icon-set-up"></i>
-              <span>数据报表</span>
+              <span>{{ item2.authName }}</span>
             </el-menu-item>
           </el-submenu>
         </el-menu>
@@ -92,6 +44,9 @@
 
 <script>
 export default {
+  data() {
+    return { menus: [] };
+  },
   //获取token,if toekn有-》继续渲染组件，否则-跳到登录
   //newVue之前自动触发，渲染完生命周期是mounted
   beforeCreate() {
@@ -100,7 +55,16 @@ export default {
       this.$router.push({ name: "login" });
     }
   },
+  created() {
+    this.getMnues();
+  },
   methods: {
+    async getMnues() {
+      const res = await this.$http.get("menus");
+
+      this.menus = res.data.data;
+      console.log(this.menus);
+    },
     loginout() {
       console.log("!!!");
       //localStorage.removeItem("token");
